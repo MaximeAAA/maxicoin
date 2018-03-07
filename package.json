@@ -1,0 +1,12 @@
+{
+  "name": "maxicoin",
+  "version": "1.0.0",
+  "description": "Maxicoin, the most hot and awesome coin made by NodeJS",
+  "main": "src/server.js",
+  "repository": "https://github.com/MaximeAAA/maxicoin",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "crypto-js": "^3.1.9-1"
+  }
+}
