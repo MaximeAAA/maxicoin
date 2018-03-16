@@ -1,0 +1,27 @@
+GET http://localhost:3000/blocks
+
+###
+POST http://localhost:3000/blocks
+Content-Type: application/json
+
+
+
+###
+POST http://localhost:3000/peers
+Content-Type: application/json
+
+{
+    "peer": "ws://localhost:4000"
+}
+
+###
+GET http://localhost:3000/me/balance
+
+###
+POST http://localhost:3000/transactions
+Content-Type: application/json
+
+{
+    "address": "04a5373e2bfa721ce7427ecf90bd6614774ace3a33692d9e4d9e4915b892d5bcd0680d58f8d0e19d1d79f0f73a6b6a47972a7abccb96e0036c880b3593c2dc8aa7",
+    "amount": 360
+}
