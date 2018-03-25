@@ -17,23 +17,27 @@ const ec = new elliptic.ec("secp256k1");
 
 const privateKeyLocation = path.join(__dirname, "privateKey");
 
+// PrivateKey value 생성
 const generatePrivateKey = () => {
   const keyPair = ec.genKeyPair();
   const privateKey = keyPair.getPrivate();
   return privateKey.toString(16);
 };
 
+// PrivateKey 읽기
 const getPrivateFromWallet = () => {
   const buffer = fs.readFileSync(privateKeyLocation, "utf8");
   return buffer.toString();
 };
 
+// PrivateKey를 이용하여 Public Key 읽기
 const getPublicFromWallet = () => {
   const privateKey = getPrivateFromWallet();
   const key = ec.keyFromPrivate(privateKey, "hex");
   return key.getPublic().encode("hex");
 };
 
+// 잔고조회(address를 이용하여 unspent transaction out에서 금액합계 계산)
 const getBalance = (address, uTxOuts) => {
   return _(uTxOuts)
     .filter(uTxO => uTxO.address === address)
@@ -41,7 +45,9 @@ const getBalance = (address, uTxOuts) => {
     .sum();
 };
 
+// Wallet 초기화
 const initWallet = () => {
+  // PrivateKey 파일 생성확인
   if (fs.existsSync(privateKeyLocation)) {
     return;
   }
@@ -55,7 +61,7 @@ const findAmountInUTxOuts = (amountNeeded, myUTxOuts) => {
   const includedUTxOuts = [];
   for (const myUTxOut of myUTxOuts) {
     includedUTxOuts.push(myUTxOut);
-    currentAmount = currentAmount = myUTxOut.amount;
+    currentAmount = currentAmount + myUTxOut.amount;
     if (currentAmount >= amountNeeded) {
       const leftOverAmount = currentAmount - amountNeeded;
       return { includedUTxOuts, leftOverAmount };
@@ -65,6 +71,7 @@ const findAmountInUTxOuts = (amountNeeded, myUTxOuts) => {
   return false;
 };
 
+// Transaction Out 생성(수신자주소, 내주소, 금액, 잔액)
 const createTxOuts = (receiverAddress, myAddress, amount, leftOverAmount) => {
   const receiverTxOut = new TxOut(receiverAddress, amount);
   if (leftOverAmount === 0) {
@@ -85,8 +92,7 @@ const filterUTxOutsFromMempool = (uTxOutList, mempool) => {
 
   for (const uTxOut of uTxOutList) {
     const txIn = _.find(
-      txIns,
-      txIn =>
+      txIns,txIn =>
         txIn.txOutIndex === uTxOut.txOutIndex && txIn.txOutId === uTxOut.txOutId
     );
     if (txIn !== undefined) {
@@ -97,8 +103,11 @@ const filterUTxOutsFromMempool = (uTxOutList, mempool) => {
   return _.without(uTxOutList, ...removables);
 };
 
+// Transaction 생성
 const createTx = (receiverAddress, amount, privateKey, uTxOutList, memPool) => {
+  // 주소로 사용할 public key 조회
   const myAddress = getPublicKey(privateKey);
+  // 주소를 이용하여 unspent transaction list 조회
   const myUTxOuts = uTxOutList.filter(uTxO => uTxO.address === myAddress);
 
   const filteredUTxOuts = filterUTxOutsFromMempool(myUTxOuts, memPool);
